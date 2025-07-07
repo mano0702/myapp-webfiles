@@ -13,7 +13,8 @@
     const video = document.getElementById('video');
 
     // 1. 카메라 권한 요청 및 스트림 재생
-    navigator.mediaDevices.getUserMedia({ video: true })
+   
+      navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
       .then(stream => { video.srcObject = stream; })
       .catch(err => alert('카메라 권한이 필요합니다: ' + err));
 
