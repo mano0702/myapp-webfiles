@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>앱인벤터용 카메라 + 서버 전송</title>
+</head>
+<body>
+  <h3>카메라 실행 중</h3>
+  <video id="video" width="320" height="240" autoplay></video><br/>
+  <button id="snap">사진 찍기</button>
+
+  <script>
+    const video = document.getElementById('video');
+
+    // 1. 카메라 권한 요청 및 스트림 재생
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then(stream => { video.srcObject = stream; })
+      .catch(err => alert('카메라 권한이 필요합니다: ' + err));
+
+    // 2. 사진 찍기 버튼
+    document.getElementById('snap').addEventListener('click', () => {
+      // 캔버스에 현재 비디오 프레임 그리기
+      const canvas = document.createElement('canvas');
+      canvas.width = 320;
+      canvas.height = 240;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(video, 0, 0, 320, 240);
+
+      // 3. Blob 객체로 변환
+      canvas.toBlob(blob => {
+        // 4. FormData에 이미지 파일 추가
+        const formData = new FormData();
+        formData.append('file', blob, 'photo.png');
+
+        // 5. Flask 서버에 POST 전송
+        fetch('https://YOUR_FLASK_SERVER_URL/detect', {
+          method: 'POST',
+          body: formData,
+        })
+        .then(res => res.json())
+        .then(data => {
+          // 6. 서버 결과를 앱인벤터에 전달 (AppInventor API 사용)
+          if (window.AppInventor && window.AppInventor.setWebViewString) {
+            window.AppInventor.setWebViewString(JSON.stringify(data));
+          }
+          alert('감지 결과: ' + JSON.stringify(data));
+        })
+        .catch(err => alert('서버 통신 오류: ' + err));
+      }, 'image/png');
+    });
+  </script>
+</body>
+</html>
